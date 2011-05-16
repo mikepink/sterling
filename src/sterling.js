@@ -3,6 +3,7 @@
 */
 
 var http = require('http');
+var mysql = require('./config/mysql.js').config;
 
 if (process.argv.length < 3) {
   console.error("useage: node sterling.js <port>");
