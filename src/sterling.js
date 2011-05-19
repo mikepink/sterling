@@ -10,6 +10,7 @@ var url = require('url');
 
 var version = '0.1';
 var port = 80;
+var agents = JSON.parse(fs.readFileSync('./agents.json'));
 
 if (process.argv.length == 3) {
   port = parseInt(process.argv[2], 10);
@@ -93,8 +94,18 @@ function findStaticFile(req, res, stats) {
 }
 
 function findAgent(req, res) {
-  // TODO: put real code here.
+  // Find an agent. If none, 404 the request.
+  for (var i = 0, len = agents.length(); i < len; ++i) {
+    var m = req.pathname(agents[i][0]);
+    if (m) {
+      require('./agents/' + agents[i][1] + '.js').compose(req, res, m);
+      return true;
+    }
+  }
+
+  // Looks like we failed to find an agent for job.
   send404(res);
+  return false;
 }
 
 // Let's get this party started.
