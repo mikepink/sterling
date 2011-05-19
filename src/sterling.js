@@ -9,10 +9,10 @@ var mime = require('./lib/mime.js');
 var url = require('url');
 
 var version = '0.1';
+var port = 80;
 
-if (process.argv.length < 3) {
-  console.error("useage: node sterling.js <port>");
-  process.exit(1);
+if (process.argv.length == 3) {
+  port = parseInt(process.argv[2], 10);
 }
 
 function start(port) {
@@ -101,5 +101,5 @@ function findAgent(req, res) {
 }
 
 // Let's get this party started.
-start(parseInt(process.argv[2], 10));
+start(port);
 
