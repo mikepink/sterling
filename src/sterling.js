@@ -52,7 +52,7 @@ function send404(res) {
 }
 
 function sendFile(res, file_path, stats) {
-  fs.open(file_path, 'r', 0660, function(error, fd) {
+  fs.readFile(file_path, function(error, buffer) {
     if (error) {
       send404();
       return false;
@@ -60,10 +60,8 @@ function sendFile(res, file_path, stats) {
 
     sendHeader(res, 200,
       {'Content-Length': stats.size, 'Content-Type': mime.get(file_path)});
-    res.write(fd);
+    res.write(buffer);
     res.end();
-
-    fs.close(fd);
   });
 }
 
@@ -71,14 +69,13 @@ function findStaticFile(req, res, stats) {
   var file_path = './www/' + req.filename.replace('/\.\.\//g', '');
 
   fs.stat(file_path, function(error, stats) {
-    console.log(error);
     if (error) {
       // Looks like we weren't able to open this file.
       // Lets see if the path matches an Agent.
       findAgent(req, res);
       return false;
     }
-    console.log(stats);
+    
     if (stats.isDirectory()) {
       // Look for an index.html file.
       req.filename += '/index.html';
