@@ -10,7 +10,7 @@ var url = require('url');
 
 var version = '0.1';
 var port = 80;
-var agents = JSON.parse(fs.readFileSync('./agents.json'));
+var agents = JSON.parse(fs.readFileSync('./agents.json', 'UTF-8'));
 
 if (process.argv.length == 3) {
   port = parseInt(process.argv[2], 10);
@@ -45,7 +45,7 @@ function sendHeader(res, code, headers) {
 }
 
 function send404(res) {
-  var msg = 'File not Found';
+  var msg = 'File Not Found';
 
   sendHeader(res, 404, {'Content-Length': msg.length});
   res.write(msg);
@@ -66,9 +66,9 @@ function sendFile(res, file_path, stats) {
   });
 }
 
-function findStaticFile(req, res, stats) {
+function findStaticFile(req, res) {
   var file_path = './www/' + req.filename.replace('/\.\.\//g', '');
-
+  
   fs.stat(file_path, function(error, stats) {
     if (error) {
       // Looks like we weren't able to open this file.
@@ -80,7 +80,7 @@ function findStaticFile(req, res, stats) {
     if (stats.isDirectory()) {
       // Look for an index.html file.
       req.filename += '/index.html';
-      findStaticFile(req);
+      findStaticFile(req, res);
       return false;
     }
 
@@ -95,14 +95,18 @@ function findStaticFile(req, res, stats) {
 
 function findAgent(req, res) {
   // Find an agent. If none, 404 the request.
-  for (var i = 0, len = agents.length(); i < len; ++i) {
-    var m = req.pathname(agents[i][0]);
+  for (var i = 0, len = agents.length; i < len; ++i) {
+    var m = req.pathname.match(new RegExp(agents[i][0]));
+    console.log(m);
+    console.log(agents[i][0]);
+    console.log(req.pathname);
     if (m) {
-      require('./agents/' + agents[i][1] + '.js').compose(req, res, m);
+      require('./agents/' + agents[i][1] + '.js').compose(req, res, m,
+      sendHeader);
       return true;
     }
   }
-
+  
   // Looks like we failed to find an agent for job.
   send404(res);
   return false;
